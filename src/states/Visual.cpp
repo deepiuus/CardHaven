@@ -21,7 +21,7 @@ namespace triad
 
     void Visual::Init()
     {
-        MusicManager::GetInstance().Play("assets/sounds/Variation-on-Egmont.ogg");
+        MusicManager::GetInstance().Play("assets/sounds/Titanium.wav");
         initTextures();
         if (!_font.loadFromFile("assets/fonts/upheavtt.ttf")) {
             throw Error("Failed to load font");

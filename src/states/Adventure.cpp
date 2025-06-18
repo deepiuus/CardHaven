@@ -10,7 +10,7 @@
 namespace triad
 {
     Adventure::Adventure(StateManager &stateManager) : _stateManager(stateManager),
-        _levelManager(stateManager.GetLevelManager()), _map(nullptr), _rocks(), _playerPos(0, 0), _tileSize(64)
+        _levelManager(stateManager.GetLevelManager()), _map(nullptr), _rocks(), _playerPos(0, 0), _tileSize(64), _hasKey(false)
     {
     }
 
@@ -20,7 +20,7 @@ namespace triad
 
     void Adventure::Init()
     {
-        MusicManager::GetInstance().Play("assets/sounds/Pure-Attitude.ogg");
+        MusicManager::GetInstance().Play("assets/sounds/Vitality.wav");
         initTextures();
         _levelManager.LoadLevel();
         _map = &_levelManager.GetMap();
@@ -105,6 +105,11 @@ namespace triad
                     _stateManager.RequestStateChange(std::make_unique<Menu>(_stateManager));
                     return;
                 }
+            }
+            if ((*_map)[_playerPos.y][_playerPos.x] == 'K') {
+                _hasKey = true;
+                _keyTexture = sf::Texture();
+                return;
             }
         }
     }

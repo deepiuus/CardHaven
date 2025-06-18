@@ -50,6 +50,7 @@ namespace triad
             sf::Vector2f _dragOffset;
             sf::FloatRect _boardGrid[3][3];
             std::pair<int, int> _boardOccupancy[3][3];
+            sf::Sprite* _boardSprites[3][3];
             bool _fromMenu;
     };
 }

@@ -91,7 +91,6 @@ namespace triad
         _cards.emplace(18, std::make_unique<Card>(18, "sylphe", 2, 5, 4, 4));
         _cards.emplace(19, std::make_unique<Card>(19, "tataru", 7, 3, 2, 2));
         _cards.emplace(20, std::make_unique<Card>(20, "tomberry", 2, 7, 2, 2));
-        _cards.emplace(21, std::make_unique<Card>(21, "eric", 3, 7, 2, 10));
 
         for (auto &pair : _cards) {
             std::string path = "assets/sprites/" + pair.second->GetName() + ".png";

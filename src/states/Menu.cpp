@@ -25,7 +25,7 @@ namespace triad
 
     void Menu::Init()
     {
-        MusicManager::GetInstance().Play("assets/sounds/Kick-Shock.ogg");
+        MusicManager::GetInstance().Play("assets/sounds/Alchemy.wav");
         if (!font.loadFromFile("assets/fonts/upheavtt.ttf")) {
             throw Error("Failed to load font");
         }
