@@ -34,8 +34,8 @@ namespace triad
             &CardManager::GetInstance().GetCard(6),
             &CardManager::GetInstance().GetCard(7),
             &CardManager::GetInstance().GetCard(8),
-            &CardManager::GetInstance().GetCard(14),
-            &CardManager::GetInstance().GetCard(15),
+            &CardManager::GetInstance().GetCard(9),
+            &CardManager::GetInstance().GetCard(10),
         };
         _player1Cards.clear();
         _player2Cards.clear();
@@ -66,7 +66,7 @@ namespace triad
                     cellSize,
                     cellSize
                 );
-                _boardOccupancy[y][x] = {-1, -1};
+                _boardOccupancy[y][x] = {-1, nullptr};
                 _boardSprites[y][x] = nullptr;
             }
     }
@@ -106,24 +106,17 @@ namespace triad
         int playerCount = 0;
         int ennemyCount = 0;
         int occupiedCount = 0;
-        int currentPlayer = _boardOccupancy[y][x].first;
-        int currentIndex = _boardOccupancy[y][x].second;
-        const Card *currentCard = (currentPlayer == 0)
-            ? _player1Deck[currentIndex]
-            : _player2Deck[currentIndex];
+        int currentPlayer = _boardOccupancy[y][x].owner;
+        const Card *currentCard = _boardOccupancy[y][x].card;
         int adjPlayer = 0;
-        int adjIndex = 0;
         const Card *adjCard = nullptr;
 
         if (y > 0) {
-            adjPlayer = _boardOccupancy[y - 1][x].first;
-            adjIndex = _boardOccupancy[y - 1][x].second;
+            adjPlayer = _boardOccupancy[y - 1][x].owner;
+            adjCard = _boardOccupancy[y - 1][x].card;
             if (adjPlayer != -1 && adjPlayer != currentPlayer) {
-                adjCard = (adjPlayer == 0)
-                    ? _player1Deck[adjIndex]
-                    : _player2Deck[adjIndex];
                 if (currentCard->GetTop() > adjCard->GetBottom()) {
-                    _boardOccupancy[y - 1][x].first = currentPlayer;
+                    _boardOccupancy[y - 1][x].owner = currentPlayer;
                     if (_boardSprites[y-1][x])
                         _boardSprites[y-1][x]->setColor(currentPlayer == 0 ? sf::Color(100, 100, 255) : sf::Color(255, 100, 100));
                     printf("%s captured with %s the card %s from the top!\n",
@@ -134,14 +127,11 @@ namespace triad
             }
         }
         if (y < 2) {
-            adjPlayer = _boardOccupancy[y + 1][x].first;
-            adjIndex = _boardOccupancy[y + 1][x].second;
+            adjPlayer = _boardOccupancy[y + 1][x].owner;
+            adjCard = _boardOccupancy[y + 1][x].card;
             if (adjPlayer != -1 && adjPlayer != currentPlayer) {
-                adjCard = (adjPlayer == 0)
-                    ? _player1Deck[adjIndex]
-                    : _player2Deck[adjIndex];
                 if (currentCard->GetBottom() > adjCard->GetTop()) {
-                    _boardOccupancy[y + 1][x].first = currentPlayer;
+                    _boardOccupancy[y + 1][x].owner = currentPlayer;
                     if (_boardSprites[y+1][x])
                         _boardSprites[y+1][x]->setColor(currentPlayer == 0 ? sf::Color(100, 100, 255) : sf::Color(255, 100, 100));
                     printf("%s captured with %s the card %s from the bottom!\n",
@@ -152,14 +142,11 @@ namespace triad
             }
         }
         if (x > 0) {
-            adjPlayer = _boardOccupancy[y][x - 1].first;
-            adjIndex = _boardOccupancy[y][x - 1].second;
+            adjPlayer = _boardOccupancy[y][x - 1].owner;
+            adjCard = _boardOccupancy[y][x - 1].card;
             if (adjPlayer != -1 && adjPlayer != currentPlayer) {
-                adjCard = (adjPlayer == 0)
-                    ? _player1Deck[adjIndex]
-                    : _player2Deck[adjIndex];
                 if (currentCard->GetLeft() > adjCard->GetRight()) {
-                    _boardOccupancy[y][x - 1].first = currentPlayer;
+                    _boardOccupancy[y][x - 1].owner = currentPlayer;
                     if (_boardSprites[y][x-1])
                         _boardSprites[y][x-1]->setColor(currentPlayer == 0 ? sf::Color(100, 100, 255) : sf::Color(255, 100, 100));
                     printf("%s captured with %s the card %s from the left!\n",
@@ -170,14 +157,11 @@ namespace triad
             }
         }
         if (x < 2) {
-            adjPlayer = _boardOccupancy[y][x + 1].first;
-            adjIndex = _boardOccupancy[y][x + 1].second;
+            adjPlayer = _boardOccupancy[y][x + 1].owner;
+            adjCard = _boardOccupancy[y][x + 1].card;
             if (adjPlayer != -1 && adjPlayer != currentPlayer) {
-                adjCard = (adjPlayer == 0)
-                    ? _player1Deck[adjIndex]
-                    : _player2Deck[adjIndex];   
                 if (currentCard->GetRight() > adjCard->GetLeft()) {
-                    _boardOccupancy[y][x + 1].first = currentPlayer;
+                    _boardOccupancy[y][x + 1].owner = currentPlayer;
                     if (_boardSprites[y][x+1])
                         _boardSprites[y][x+1]->setColor(currentPlayer == 0 ? sf::Color(100, 100, 255) : sf::Color(255, 100, 100));
                     printf("%s captured with %s the card %s from the right!\n",
@@ -189,11 +173,11 @@ namespace triad
         }
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (_boardOccupancy[i][j].first == 0)
+                if (_boardOccupancy[i][j].owner == 0)
                     playerCount++;
-                else if (_boardOccupancy[i][j].first == 1)
+                else if (_boardOccupancy[i][j].owner == 1)
                     ennemyCount++;
-                if (_boardOccupancy[i][j].first != -1)
+                if (_boardOccupancy[i][j].owner != -1)
                     occupiedCount++;
             }
         }
@@ -237,14 +221,15 @@ namespace triad
                 cellCenter.y - _player1Cards[_draggedCard.y].getTexture()->getSize().y / 2.f
             );
             _boardSprites[y][x] = &_player1Cards[_draggedCard.y];
+            _boardOccupancy[y][x] = {0, _player1Deck[_draggedCard.y]};
         } else {
             _player2Cards[_draggedCard.y].setPosition(
                 cellCenter.x - _player2Cards[_draggedCard.y].getTexture()->getSize().x / 2.f,
                 cellCenter.y - _player2Cards[_draggedCard.y].getTexture()->getSize().y / 2.f
             );
             _boardSprites[y][x] = &_player2Cards[_draggedCard.y];
+            _boardOccupancy[y][x] = {1, _player2Deck[_draggedCard.y]};
         }
-        _boardOccupancy[y][x] = { _draggedCard.x, _draggedCard.y };
     }
 
     void Arena::OccupyCell()
@@ -263,7 +248,7 @@ namespace triad
             return;
         for (int y = 0; y < 3; y++)
             for (int x = 0; x < 3; x++)
-                if (_boardGrid[y][x].intersects(bounds) && _boardOccupancy[y][x].first == -1) {
+                if (_boardGrid[y][x].intersects(bounds) && _boardOccupancy[y][x].owner == -1) {
                     foundX = x;
                     foundY = y;
                 }

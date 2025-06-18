@@ -49,7 +49,11 @@ namespace triad
             bool _dragging = false;
             sf::Vector2f _dragOffset;
             sf::FloatRect _boardGrid[3][3];
-            std::pair<int, int> _boardOccupancy[3][3];
+            struct CellInfo {
+                int owner;
+                const Card *card;
+            };
+            CellInfo _boardOccupancy[3][3];
             sf::Sprite* _boardSprites[3][3];
             bool _fromMenu;
     };
