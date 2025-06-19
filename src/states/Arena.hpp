@@ -26,7 +26,7 @@ namespace triad
             void Display() override;
             void Destroy() override;
             void SetFromMenu(bool fromMenu);
-            void SetScore(float p1Width, float p2Width, float barX, float barY, float barWidth, float barHeight);
+            void SetScore();
 
         private:
             void SetupBoard(float cellSize, float cellGap, float gridStartX, float gridStartY);

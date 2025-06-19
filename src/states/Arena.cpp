@@ -326,14 +326,21 @@ namespace triad
         }
     }
 
-    void Arena::SetScore(float p1Width, float p2Width, float barX, float barY, float barWidth, float barHeight)
+    void Arena::SetScore()
     {
+        float total = _playerCount + _ennemyCount;
+        float barWidth = width * 0.8f;
+        float barHeight = 30.f;
+        float barX = width * 0.1f;
+        float barY = 60.f;
+        float p1Width = (total > 0 ? barWidth * (_playerCount / total) : 0);
+        float p2Width = (total > 0 ? barWidth * (_ennemyCount / total) : 0);
         sf::RectangleShape p1Bar(sf::Vector2f(p1Width, barHeight));
         p1Bar.setPosition(barX, barY);
-        p1Bar.setFillColor(sf::Color(50, 50, 255));
+        p1Bar.setFillColor(sf::Color(100, 100, 255));
         sf::RectangleShape p2Bar(sf::Vector2f(p2Width, barHeight));
         p2Bar.setPosition(barX + p1Width, barY);
-        p2Bar.setFillColor(sf::Color(255, 50, 50));
+        p2Bar.setFillColor(sf::Color(255, 100, 100));
         _stateManager.GetWindow().draw(p1Bar);
         _stateManager.GetWindow().draw(p2Bar);
         sf::Text scoreText;
@@ -342,32 +349,24 @@ namespace triad
         scoreText.setFillColor(sf::Color::White);
         scoreText.setString(std::to_string(_playerCount) + " - " + std::to_string(_ennemyCount));
         sf::FloatRect textRect = scoreText.getLocalBounds();
-        scoreText.setPosition(barX + barWidth / 2 - textRect.width / 2, barY - textRect.height + 5);
+        scoreText.setPosition(barX + barWidth / 2 - textRect.width / 2, barY - textRect.height - 8);
         _stateManager.GetWindow().draw(scoreText);
     }
 
     void Arena::Display()
     {
-        float total = _playerCount + _ennemyCount;
-        float barWidth = width * 0.8f;
-        float barHeight = 20.f;
-        float barX = width * 0.1f;
-        float barY = 560.f;
-        float p1Width = (total > 0 ? barWidth * (_playerCount / total) : 0);
-        float p2Width = (total > 0 ? barWidth * (_ennemyCount / total) : 0);
-
-        _stateManager.GetWindow().clear(sf::Color::Blue);
+        sf::RenderWindow &window = _stateManager.GetWindow();
+        window.clear(sf::Color::Blue);
         _sprite.setTexture(_texture);
-        _sprite.setPosition(width / 2 - _texture.getSize().x / 2,
-                            height / 2 - _texture.getSize().y / 2);
+        _sprite.setPosition(width / 2 - _texture.getSize().x / 2, height / 2 - _texture.getSize().y / 2);
         _sprite.setScale(1.0f, 1.0f);
-        _stateManager.GetWindow().draw(_sprite);
-        _stateManager.GetWindow().draw(_turnText);
-        SetScore(p1Width, p2Width, barX, barY, barWidth, barHeight);
+        window.draw(_sprite);
+        window.draw(_turnText);
+        SetScore();
         for (auto &sprite : _player1Cards)
-            _stateManager.GetWindow().draw(sprite);
+            window.draw(sprite);
         for (auto &sprite : _player2Cards)
-            _stateManager.GetWindow().draw(sprite);
+            window.draw(sprite);
     }
 
     void Arena::Destroy()
