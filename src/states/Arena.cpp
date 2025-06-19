@@ -6,11 +6,14 @@
 */
 
 #include "Arena.hpp"
+#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Font.hpp>
 
 namespace triad
 {
     Arena::Arena(StateManager &stateManager)
-        : _stateManager(stateManager), width(800), height(600), _fromMenu(false)
+        : _stateManager(stateManager), width(800), height(600), _fromMenu(false),
+          _playerCount(0), _ennemyCount(0), _occupiedCount(0)
     {
     }
 
@@ -74,7 +77,7 @@ namespace triad
    void Arena::Init()
     {
         int cardSpacing = 30;
-        int cardY = height / 2 - (5 * 60 + 4 * cardSpacing) / 2;
+        int cardY = 60;
         float cellSize = 120;
         float cellGap = 5;
         float gridWidth = 3 * cellSize + 2 * cellGap;
@@ -85,12 +88,21 @@ namespace triad
         MusicManager::GetInstance().Play("assets/sounds/Epitomize.wav");
         SetupBoard(cellSize, cellGap, gridStartX, gridStartY);
         SetupCards(cardSpacing, cardY);
+        _currentTurn = 1;
+        if (!_font.loadFromFile("assets/fonts/upheavtt.ttf")) {
+            throw Error("Failed to load font");
+        }
+        _turnText.setFont(_font);
+        _turnText.setCharacterSize(36);
+        _turnText.setFillColor(sf::Color::White);
+        _turnText.setPosition(width / 2 - 150, 10);
+        _turnText.setString(_currentTurn == 1 ? "Player 1 turn" : "Player 2 turn");
     }
 
     void Arena::ResetCard()
     {
         int cardSpacing = 30;
-        int cardY = height / 2 - (5 * 60 + 4 * cardSpacing) / 2;
+        int cardY = 60;
 
         if (_draggedCard.x == 0)
             _player1Cards[_draggedCard.y].setPosition(30,
@@ -103,13 +115,13 @@ namespace triad
 
     void Arena::CaptureCard(int x, int y)
     {
-        int playerCount = 0;
-        int ennemyCount = 0;
-        int occupiedCount = 0;
         int currentPlayer = _boardOccupancy[y][x].owner;
         const Card *currentCard = _boardOccupancy[y][x].card;
         int adjPlayer = 0;
         const Card *adjCard = nullptr;
+        _playerCount = 0;
+        _ennemyCount = 0;
+        _occupiedCount = 0;
 
         if (y > 0) {
             adjPlayer = _boardOccupancy[y - 1][x].owner;
@@ -174,18 +186,18 @@ namespace triad
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (_boardOccupancy[i][j].owner == 0)
-                    playerCount++;
+                    _playerCount++;
                 else if (_boardOccupancy[i][j].owner == 1)
-                    ennemyCount++;
+                    _ennemyCount++;
                 if (_boardOccupancy[i][j].owner != -1)
-                    occupiedCount++;
+                    _occupiedCount++;
             }
         }
-        printf("Player has %d cards, Ennemy has %d cards\n", playerCount, ennemyCount);
-        if (occupiedCount == 9) {
-            if (playerCount > ennemyCount)
+        printf("Player has %d cards, Ennemy has %d cards\n", _playerCount, _ennemyCount);
+        if (_occupiedCount == 9) {
+            if (_playerCount > _ennemyCount)
                 printf("Player wins\n");
-            else if (ennemyCount > playerCount)
+            else if (_ennemyCount > _playerCount)
                 printf("Ennemy wins\n");
             else
                 printf("It's a draw\n");
@@ -195,10 +207,10 @@ namespace triad
                 _stateManager.RequestStateChange(std::move(arena));
                 return;
             }
-            if (playerCount > ennemyCount) {
+            if (_playerCount > _ennemyCount) {
                 _stateManager.GetLevelManager().NextLevel();
                 _stateManager.RequestStateChange(std::make_unique<Adventure>(_stateManager));
-            } else if (ennemyCount > playerCount) {
+            } else if (_ennemyCount > _playerCount) {
                 _stateManager.GetLevelManager().ResetLevel();
                 _stateManager.RequestStateChange(std::make_unique<Adventure>(_stateManager));
             } else {
@@ -230,6 +242,8 @@ namespace triad
             _boardSprites[y][x] = &_player2Cards[_draggedCard.y];
             _boardOccupancy[y][x] = {1, _player2Deck[_draggedCard.y]};
         }
+        _currentTurn = 1 - _currentTurn;
+        _turnText.setString(_currentTurn == 1 ? "Player 1 turn" : "Player 2 turn");
     }
 
     void Arena::OccupyCell()
@@ -265,23 +279,25 @@ namespace triad
     void Arena::DraggingCard()
     {
         sf::Vector2i mousePos = sf::Mouse::getPosition(_stateManager.GetWindow());
-
-        for (size_t i = 0; i < _player1Cards.size(); i++) {
-            if (_player1Cards[i].getGlobalBounds().contains(
-                static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
-                _dragging = true;
-                _draggedCard = {0, static_cast<int>(i)};
-                _dragOffset = _player1Cards[i].getPosition() - sf::Vector2f(mousePos);
-                break;
+        if (_currentTurn == 1) {
+            for (size_t i = 0; i < _player1Cards.size(); i++) {
+                if (_player1Cards[i].getGlobalBounds().contains(
+                    static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
+                    _dragging = true;
+                    _draggedCard = {0, static_cast<int>(i)};
+                    _dragOffset = _player1Cards[i].getPosition() - sf::Vector2f(mousePos);
+                    break;
+                }
             }
-        }
-        for (size_t i = 0; i < _player2Cards.size(); i++) {
-            if (_player2Cards[i].getGlobalBounds().contains(
-                static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
-                _dragging = true;
-                _draggedCard = {1, static_cast<int>(i)};
-                _dragOffset = _player2Cards[i].getPosition() - sf::Vector2f(mousePos);
-                break;
+        } else {
+            for (size_t i = 0; i < _player2Cards.size(); i++) {
+                if (_player2Cards[i].getGlobalBounds().contains(
+                    static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
+                    _dragging = true;
+                    _draggedCard = {1, static_cast<int>(i)};
+                    _dragOffset = _player2Cards[i].getPosition() - sf::Vector2f(mousePos);
+                    break;
+                }
             }
         }
     }
@@ -310,15 +326,44 @@ namespace triad
         }
     }
 
+    void Arena::SetScore(float p1Width, float p2Width, float barX, float barY, float barWidth, float barHeight)
+    {
+        sf::RectangleShape p1Bar(sf::Vector2f(p1Width, barHeight));
+        p1Bar.setPosition(barX, barY);
+        p1Bar.setFillColor(sf::Color(50, 50, 255));
+        sf::RectangleShape p2Bar(sf::Vector2f(p2Width, barHeight));
+        p2Bar.setPosition(barX + p1Width, barY);
+        p2Bar.setFillColor(sf::Color(255, 50, 50));
+        _stateManager.GetWindow().draw(p1Bar);
+        _stateManager.GetWindow().draw(p2Bar);
+        sf::Text scoreText;
+        scoreText.setFont(_font);
+        scoreText.setCharacterSize(24);
+        scoreText.setFillColor(sf::Color::White);
+        scoreText.setString(std::to_string(_playerCount) + " - " + std::to_string(_ennemyCount));
+        sf::FloatRect textRect = scoreText.getLocalBounds();
+        scoreText.setPosition(barX + barWidth / 2 - textRect.width / 2, barY - textRect.height + 5);
+        _stateManager.GetWindow().draw(scoreText);
+    }
+
     void Arena::Display()
     {
+        float total = _playerCount + _ennemyCount;
+        float barWidth = width * 0.8f;
+        float barHeight = 20.f;
+        float barX = width * 0.1f;
+        float barY = 560.f;
+        float p1Width = (total > 0 ? barWidth * (_playerCount / total) : 0);
+        float p2Width = (total > 0 ? barWidth * (_ennemyCount / total) : 0);
+
         _stateManager.GetWindow().clear(sf::Color::Blue);
         _sprite.setTexture(_texture);
         _sprite.setPosition(width / 2 - _texture.getSize().x / 2,
                             height / 2 - _texture.getSize().y / 2);
         _sprite.setScale(1.0f, 1.0f);
         _stateManager.GetWindow().draw(_sprite);
-
+        _stateManager.GetWindow().draw(_turnText);
+        SetScore(p1Width, p2Width, barX, barY, barWidth, barHeight);
         for (auto &sprite : _player1Cards)
             _stateManager.GetWindow().draw(sprite);
         for (auto &sprite : _player2Cards)

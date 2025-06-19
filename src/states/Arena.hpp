@@ -26,6 +26,7 @@ namespace triad
             void Display() override;
             void Destroy() override;
             void SetFromMenu(bool fromMenu);
+            void SetScore(float p1Width, float p2Width, float barX, float barY, float barWidth, float barHeight);
 
         private:
             void SetupBoard(float cellSize, float cellGap, float gridStartX, float gridStartY);
@@ -55,7 +56,13 @@ namespace triad
             };
             CellInfo _boardOccupancy[3][3];
             sf::Sprite* _boardSprites[3][3];
+            int _currentTurn;
+            sf::Font _font;
+            sf::Text _turnText;
             bool _fromMenu;
+            int _playerCount;
+            int _ennemyCount;
+            int _occupiedCount;
     };
 }
 
