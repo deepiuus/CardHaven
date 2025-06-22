@@ -36,6 +36,13 @@ namespace triad
             void PlaceCard(int x, int y);
             void CaptureCard(int x, int y);
             void ResetCard();
+            bool isCardOnBoard(const Card* card) const;
+            int GetHoveredId(const std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, float baseX, float baseY, int cardCount, const sf::Vector2i& mousePos) const;
+            void SetHoveredStyle(sf::Sprite& card, bool isHovered, float baseX, float baseY, sf::Color normalColor, sf::Color hoverColor) const;
+            void SetHoveredCards(std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, float baseX, sf::Color normalColor, sf::Color hoverColor, int hoveredIdx) const;
+            void SetDraggedCards(std::vector<sf::Sprite> &cards, std::vector<const Card *> &deck, int playerIndex, const sf::Vector2i &mousePos);
+            bool SetCapturedCard(int x, int y, int nx, int ny, int myValue, int theirValue, const char* dirName);
+            void DrawCards(sf::RenderWindow& window, const std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, int hoveredIdx, bool drawHoveredLast) const;
             int width;
             int height;
             sf::Sprite _sprite;
@@ -59,10 +66,15 @@ namespace triad
             int _currentTurn;
             sf::Font _font;
             sf::Text _turnText;
+            sf::Text _endGameText;
+            sf::Clock _endGameClock;
+            bool _endGame;
             bool _fromMenu;
             int _playerCount;
             int _ennemyCount;
             int _occupiedCount;
+            int _cardSpacing;
+            int _cardY;
     };
 }
 
