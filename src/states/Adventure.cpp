@@ -10,7 +10,7 @@
 namespace triad
 {
     Adventure::Adventure(StateManager &stateManager) : _stateManager(stateManager),
-        _levelManager(stateManager.GetLevelManager()), _map(nullptr), _rocks(), _playerPos(0, 0), _tileSize(64), _hasKey(false)
+        _levelManager(stateManager.GetLevelManager()), _map(nullptr), _rocks(), _playerPos(0, 0), _tileSize(64), _hasKey(false), _lockOpened(false)
     {
     }
 
@@ -35,13 +35,17 @@ namespace triad
                 }
             }
         }
+        _lockOpened = false;
     }
 
     bool Adventure::isCellFree(int x, int y) const
     {
         char cell = (*_map)[y][x];
-
-        if ((cell == ' ' || cell == 'W' || cell == 'P') && !isRockAt(x, y))
+        if (_lockOpened && cell == 'O' && !isRockAt(x, y))
+            return true;
+        if ((cell == ' ' || cell == 'W' || cell == 'P' || cell == 'K') && !isRockAt(x, y))
+            return true;
+        if (cell == 'O' && _hasKey && !isRockAt(x, y))
             return true;
         if (cell == 'X' && !isRockAt(x, y))
             return true;
@@ -106,9 +110,13 @@ namespace triad
                     return;
                 }
             }
-            if ((*_map)[_playerPos.y][_playerPos.x] == 'K') {
+            if ((*_map)[_playerPos.y][_playerPos.x] == 'K' && !_hasKey && !_lockOpened) {
                 _hasKey = true;
-                _keyTexture = sf::Texture();
+                return;
+            }
+            if ((*_map)[_playerPos.y][_playerPos.x] == 'O' && _hasKey && !_lockOpened) {
+                _hasKey = false;
+                _lockOpened = true;
                 return;
             }
         }
@@ -142,6 +150,35 @@ namespace triad
     {
         int dx = 0;
         int dy = 0;
+
+        switch (key) {
+            case TKey::R:
+                _levelManager.ResetLevel();
+                Init();
+                return;
+            case TKey::N1:
+                _levelManager.SetLevel(TLevel::LEVEL1);
+                Init();
+                return;
+            case TKey::N2:
+                _levelManager.SetLevel(TLevel::LEVEL2);
+                Init();
+                return;
+            case TKey::N3:
+                _levelManager.SetLevel(TLevel::LEVEL3);
+                Init();
+                return;
+            case TKey::N4:
+                _levelManager.SetLevel(TLevel::LEVEL4);
+                Init();
+                return;
+            case TKey::N5:
+                _levelManager.SetLevel(TLevel::LEVEL5);
+                Init();
+                return;
+            default:
+                break;
+        }
 
         getDirection(dx, dy, key);
         if (_map) {
@@ -181,14 +218,18 @@ namespace triad
                         _stateManager.GetWindow().draw(_waifuSprite);
                         break;
                     case 'K':
-                        _keySprite.setScale(1.0f, 1.0f);
-                        _keySprite.setPosition(offset.x + x * _tileSize, offset.y + y * _tileSize);
-                        _stateManager.GetWindow().draw(_keySprite);
+                        if (!_hasKey && !_lockOpened) {
+                            _keySprite.setScale(1.0f, 1.0f);
+                            _keySprite.setPosition(offset.x + x * _tileSize, offset.y + y * _tileSize);
+                            _stateManager.GetWindow().draw(_keySprite);
+                        }
                         break;
                     case 'O':
-                        _lockSprite.setScale(4.0f, 4.0f);
-                        _lockSprite.setPosition(offset.x + x * _tileSize, offset.y + y * _tileSize);
-                        _stateManager.GetWindow().draw(_lockSprite);
+                        if (!_lockOpened) {
+                            _lockSprite.setScale(4.0f, 4.0f);
+                            _lockSprite.setPosition(offset.x + x * _tileSize, offset.y + y * _tileSize);
+                            _stateManager.GetWindow().draw(_lockSprite);
+                        }
                         break;
                     default:
                         break;

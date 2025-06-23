@@ -130,4 +130,10 @@ namespace triad
     {
         return _dialogueIndex;
     }
+
+    void LevelManager::SetLevel(TLevel level)
+    {
+        _currentLevel = level;
+        LoadLevel();
+    }
 }

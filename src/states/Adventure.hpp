@@ -56,6 +56,7 @@ namespace triad
             sf::Texture _lockTexture;
             sf::Sprite _lockSprite;
             bool _hasKey;
+            bool _lockOpened;
     };
 }
 

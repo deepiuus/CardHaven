@@ -27,6 +27,12 @@ namespace triad
         ESCAPE,
         LCLICK,
         RCLICK,
+        R,
+        N1,
+        N2,
+        N3,
+        N4,
+        N5,
         NONE
     };
 

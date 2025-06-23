@@ -27,6 +27,7 @@ namespace triad
             ~LevelManager();
             void LoadLevel();
             void NextLevel();
+            void SetLevel(TLevel level);
             TLevel GetLevel() const;
             const std::vector<std::vector<char>> &GetMap() const;
             void ResetLevel();

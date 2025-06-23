@@ -53,6 +53,29 @@ namespace triad
                         case sf::Keyboard::Escape:
                             key = TKey::ESCAPE;
                             break;
+                        case sf::Keyboard::R:
+                            key = TKey::R;
+                            break;
+                        case sf::Keyboard::Num1:
+                        case sf::Keyboard::Numpad1:
+                            key = TKey::N1;
+                            break;
+                        case sf::Keyboard::Num2:
+                        case sf::Keyboard::Numpad2:
+                            key = TKey::N2;
+                            break;
+                        case sf::Keyboard::Num3:
+                        case sf::Keyboard::Numpad3:
+                            key = TKey::N3;
+                            break;
+                        case sf::Keyboard::Num4:
+                        case sf::Keyboard::Numpad4:
+                            key = TKey::N4;
+                            break;
+                        case sf::Keyboard::Num5:
+                        case sf::Keyboard::Numpad5:
+                            key = TKey::N5;
+                            break;
                         default:
                             break;
                     }
