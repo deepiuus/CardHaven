@@ -164,19 +164,22 @@ namespace triad
         }
         printf("Player has %d cards, Ennemy has %d cards\n", _playerCount, _ennemyCount);
         if (_occupiedCount == 9) {
-            _endGame = true;
-            _endGameClock.restart();
             if (_playerCount > _ennemyCount) {
+                printf("Player wins\n");
                 _endGameText.setString("Victory !");
                 _endGameText.setFillColor(sf::Color(100, 255, 100));
             } else if (_ennemyCount > _playerCount) {
+                printf("Ennemy wins\n");
                 _endGameText.setString("Defeat...");
                 _endGameText.setFillColor(sf::Color(255, 100, 100));
             } else {
+                printf("It's a draw\n");
                 _endGameText.setString("Draw !");
                 _endGameText.setFillColor(sf::Color(200, 200, 200));
             }
-            _endGameText.setPosition(width / 2 - _endGameText.getLocalBounds().width / 2, height / 2 - 120);
+            _endGameText.setPosition(width / 2 - _endGameText.getLocalBounds().width / 2, height / 2 - 50);
+            _endGame = true;
+            _endGameClock.restart();
             return;
         }
     }
@@ -355,6 +358,25 @@ namespace triad
             else if (_draggedCard.x == 1)
                 _player2Cards[_draggedCard.y].setPosition(sf::Vector2f(mousePos) + _dragOffset);
         }
+        if (_endGame) {
+            if (_endGameClock.getElapsedTime().asSeconds() >= 1.5f) {
+                _endGame = false;
+                if (_fromMenu) {
+                    auto arena = std::make_unique<Arena>(_stateManager);
+                    arena->SetFromMenu(true);
+                    _stateManager.RequestStateChange(std::move(arena));
+                } else if (_playerCount > _ennemyCount) {
+                    _stateManager.GetLevelManager().NextLevel();
+                    _stateManager.RequestStateChange(std::make_unique<Adventure>(_stateManager));
+                } else if (_ennemyCount > _playerCount) {
+                    _stateManager.GetLevelManager().ResetLevel();
+                    _stateManager.RequestStateChange(std::make_unique<Adventure>(_stateManager));
+                } else {
+                    _stateManager.RequestStateChange(std::make_unique<Menu>(_stateManager));
+                }
+                return;
+            }
+        }
     }
 
     void Arena::SetScore()
@@ -411,7 +433,7 @@ namespace triad
             DrawCards(window, _player1Cards, _player1Deck, -1, false);
             DrawCards(window, _player2Cards, _player2Deck, hoveredId, true);
         }
-        if (!_endGameText.getString().isEmpty())
+        if (_endGame && !_endGameText.getString().isEmpty())
             window.draw(_endGameText);
     }
 
