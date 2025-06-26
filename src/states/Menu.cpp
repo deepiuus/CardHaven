@@ -10,6 +10,7 @@
 #include "Arena.hpp"
 #include "Settings.hpp"
 #include "DifficultyMenu.hpp"
+#include "GameModeMenu.hpp"
 
 namespace triad
 {
@@ -77,9 +78,7 @@ namespace triad
                     _stateManager.RequestStateChange(std::make_unique<DifficultyMenu>(_stateManager));
                     break;
                 case 1: {
-                    auto arena = std::make_unique<Arena>(_stateManager);
-                    arena->SetFromMenu(true);
-                    _stateManager.RequestStateChange(std::move(arena));
+                    _stateManager.RequestStateChange(std::make_unique<GameModeMenu>(_stateManager));
                     break;
                 }
                 case 2:

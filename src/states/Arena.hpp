@@ -14,10 +14,16 @@
 #include "../utils/LevelManager.hpp"
 #include "Menu.hpp"
 #include "Adventure.hpp"
+#include <utility>
 #include <random>
 
 namespace triad
 {
+    enum class TGameMode {
+        PLAYER_VS_PLAYER,
+        PLAYER_VS_AI
+    };
+
     class Arena : public IGames {
         public:
             Arena(StateManager &stateManager);
@@ -30,9 +36,14 @@ namespace triad
             void SetFromMenu(bool fromMenu);
             void SetScore();
             void SetDifficulty(TDifficulty difficulty);
+            void SetGameMode(TGameMode gameMode);
 
         private:
             void SetupDecksBasedOnDifficulty();
+            void AITurn();
+            int EvaluateMove(int cardIndex, int boardX, int boardY);
+            bool CanCaptureCards(const Card* card, int boardX, int boardY);
+            std::pair<int, sf::Vector2i> FindBestAIMove();
             void SetupBoard(float cellSize, float cellGap, float gridStartX, float gridStartY);
             void SetupCards(int cardSpacing, int cardY);
             void DraggingCard();
@@ -80,6 +91,9 @@ namespace triad
             int _cardSpacing;
             int _cardY;
             TDifficulty _difficulty;
+            TGameMode _gameMode;
+            sf::Clock _aiTimer;
+            bool _aiThinking;
     };
 }
 

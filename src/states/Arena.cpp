@@ -6,12 +6,14 @@
 */
 
 #include "Arena.hpp"
+#include <random>
+#include <utility>
 
 namespace triad
 {
     Arena::Arena(StateManager &stateManager)
         : _stateManager(stateManager), width(800), height(600), _endGame(false), _fromMenu(false),
-          _playerCount(0), _ennemyCount(0), _occupiedCount(0), _cardSpacing(30), _cardY(60), _difficulty(TDifficulty::EASY)
+          _playerCount(0), _ennemyCount(0), _occupiedCount(0), _cardSpacing(30), _cardY(60), _difficulty(TDifficulty::EASY), _gameMode(TGameMode::PLAYER_VS_AI), _aiThinking(false)
     {
     }
 
@@ -255,7 +257,7 @@ namespace triad
         sf::Vector2i mousePos = sf::Mouse::getPosition(_stateManager.GetWindow());
         if (_currentTurn == 1) {
             SetDraggedCards(_player1Cards, _player1Deck, 0, mousePos);
-        } else {
+        } else if (_gameMode == TGameMode::PLAYER_VS_PLAYER) {
             SetDraggedCards(_player2Cards, _player2Deck, 1, mousePos);
         }
     }
@@ -333,9 +335,25 @@ namespace triad
             SetHoveredCards(_player1Cards, _player1Deck, 30, sf::Color(100, 100, 255), sf::Color(180, 180, 255), hoveredId);
             SetHoveredCards(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), sf::Color(255, 100, 100), sf::Color(255, 180, 180), -1);
         } else {
-            hoveredId = GetHoveredId(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), _cardY, _player2Cards.size(), mousePos);
-            SetHoveredCards(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), sf::Color(255, 100, 100), sf::Color(255, 180, 180), hoveredId);
-            SetHoveredCards(_player1Cards, _player1Deck, 30, sf::Color(100, 100, 255), sf::Color(180, 180, 255), -1);
+            if (_gameMode == TGameMode::PLAYER_VS_AI) {
+                if (!_aiThinking) {
+                    _aiThinking = true;
+                    _aiTimer.restart();
+                } else if (_aiTimer.getElapsedTime().asSeconds() >= 1.0f) {
+                    AITurn();
+                    _aiThinking = false;
+                }
+            } else {
+                hoveredId = GetHoveredId(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), _cardY, _player2Cards.size(), mousePos);
+                SetHoveredCards(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), sf::Color(255, 100, 100), sf::Color(255, 180, 180), hoveredId);
+                SetHoveredCards(_player1Cards, _player1Deck, 30, sf::Color(100, 100, 255), sf::Color(180, 180, 255), -1);
+            }
+            
+            if (_gameMode == TGameMode::PLAYER_VS_AI) {
+                hoveredId = GetHoveredId(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), _cardY, _player2Cards.size(), mousePos);
+                SetHoveredCards(_player2Cards, _player2Deck, width - 30 - (_player2Cards.empty() ? 0 : _player2Cards[0].getTexture()->getSize().x), sf::Color(255, 100, 100), sf::Color(255, 180, 180), hoveredId);
+                SetHoveredCards(_player1Cards, _player1Deck, 30, sf::Color(100, 100, 255), sf::Color(180, 180, 255), -1);
+            }
         }
         if (_dragging) {
             sf::Vector2i mousePos = sf::Mouse::getPosition(_stateManager.GetWindow());
@@ -435,6 +453,11 @@ namespace triad
     void Arena::SetDifficulty(TDifficulty difficulty)
     {
         _difficulty = difficulty;
+    }
+
+    void Arena::SetGameMode(TGameMode gameMode)
+    {
+        _gameMode = gameMode;
     }
 
     void Arena::SetupDecksBasedOnDifficulty()
@@ -605,5 +628,115 @@ namespace triad
                 break;
             }
         }
+    }
+
+    void Arena::AITurn()
+    {
+        auto bestMove = FindBestAIMove();
+        if (bestMove.first != -1) {
+            int cardIndex = bestMove.first;
+            int boardX = bestMove.second.x;
+            int boardY = bestMove.second.y;
+            
+            sf::Vector2f cellCenter = {
+                _boardGrid[boardY][boardX].left + _boardGrid[boardY][boardX].width / 2.f,
+                _boardGrid[boardY][boardX].top + _boardGrid[boardY][boardX].height / 2.f
+            };
+            
+            _player2Cards[cardIndex].setPosition(
+                cellCenter.x - _player2Cards[cardIndex].getTexture()->getSize().x / 2.f,
+                cellCenter.y - _player2Cards[cardIndex].getTexture()->getSize().y / 2.f
+            );
+            _boardSprites[boardY][boardX] = &_player2Cards[cardIndex];
+            _boardOccupancy[boardY][boardX] = {1, _player2Deck[cardIndex]};
+            
+            CaptureCard(boardX, boardY);
+            _currentTurn = 1;
+            _turnText.setString(_currentTurn == 1 ? "Player 1 turn" : "Player 2 turn");
+        }
+    }
+
+    std::pair<int, sf::Vector2i> Arena::FindBestAIMove()
+    {
+        int bestScore = -1000;
+        int bestCardIndex = -1;
+        sf::Vector2i bestPosition(-1, -1);
+        
+        for (int cardIndex = 0; cardIndex < 5; cardIndex++) {
+            if (isCardOnBoard(_player2Deck[cardIndex])) continue;
+            
+            for (int y = 0; y < 3; y++) {
+                for (int x = 0; x < 3; x++) {
+                    if (_boardOccupancy[y][x].owner != -1) continue;
+                    
+                    int score = EvaluateMove(cardIndex, x, y);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCardIndex = cardIndex;
+                        bestPosition = sf::Vector2i(x, y);
+                    }
+                }
+            }
+        }
+        
+        return std::make_pair(bestCardIndex, bestPosition);
+    }
+
+    int Arena::EvaluateMove(int cardIndex, int boardX, int boardY)
+    {
+        const Card* card = _player2Deck[cardIndex];
+        int score = 0;
+        
+        score += 10;
+        
+        if (CanCaptureCards(card, boardX, boardY)) {
+            score += 50;
+        }
+        
+        if (boardX == 1 && boardY == 1) {
+            score += 20;
+        } else if ((boardX == 1 || boardY == 1)) {
+            score += 10;
+        }
+        
+        if ((boardX == 0 || boardX == 2) && (boardY == 0 || boardY == 2)) {
+            score += 5;
+        }
+        
+        int cardStrength = card->GetTop() + card->GetBottom() + card->GetLeft() + card->GetRight();
+        score += cardStrength;
+        
+        return score;
+    }
+
+    bool Arena::CanCaptureCards(const Card* card, int boardX, int boardY)
+    {
+        bool canCapture = false;
+        
+        if (boardY > 0 && _boardOccupancy[boardY-1][boardX].owner == 0) {
+            if (card->GetTop() > _boardOccupancy[boardY-1][boardX].card->GetBottom()) {
+                canCapture = true;
+            }
+        }
+        
+        if (boardY < 2 && _boardOccupancy[boardY+1][boardX].owner == 0) {
+            if (card->GetBottom() > _boardOccupancy[boardY+1][boardX].card->GetTop()) {
+                canCapture = true;
+            }
+        }
+        
+        if (boardX > 0 && _boardOccupancy[boardY][boardX-1].owner == 0) {
+            if (card->GetLeft() > _boardOccupancy[boardY][boardX-1].card->GetRight()) {
+                canCapture = true;
+            }
+        }
+        
+        if (boardX < 2 && _boardOccupancy[boardY][boardX+1].owner == 0) {
+            if (card->GetRight() > _boardOccupancy[boardY][boardX+1].card->GetLeft()) {
+                canCapture = true;
+            }
+        }
+        
+        return canCapture;
     }
 }
