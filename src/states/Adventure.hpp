@@ -35,6 +35,7 @@ namespace triad
             bool isCellFree(int x, int y) const;
             void initTextures();
             void setTiles(sf::Vector2f offset);
+            int calculateMaxSteps() const;
             StateManager &_stateManager;
             LevelManager _levelManager;
             const std::vector<std::vector<char>> *_map;
@@ -57,6 +58,13 @@ namespace triad
             sf::Sprite _lockSprite;
             bool _hasKey;
             bool _lockOpened;
+            int _currentSteps;
+            int _maxSteps;
+            sf::Font _font;
+            sf::Text _stepsText;
+            sf::Text _gameOverText;
+            sf::Clock _gameOverClock;
+            bool _gameOver;
     };
 }
 

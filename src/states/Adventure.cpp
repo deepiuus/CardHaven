@@ -10,7 +10,7 @@
 namespace triad
 {
     Adventure::Adventure(StateManager &stateManager) : _stateManager(stateManager),
-        _levelManager(stateManager.GetLevelManager()), _map(nullptr), _rocks(), _playerPos(0, 0), _tileSize(64), _hasKey(false), _lockOpened(false)
+        _levelManager(stateManager.GetLevelManager()), _map(nullptr), _rocks(), _playerPos(0, 0), _tileSize(64), _hasKey(false), _lockOpened(false), _currentSteps(0), _maxSteps(0), _gameOver(false)
     {
     }
 
@@ -36,6 +36,22 @@ namespace triad
             }
         }
         _lockOpened = false;
+        _currentSteps = 0;
+        _maxSteps = calculateMaxSteps();
+        _gameOver = false;
+        
+        if (!_font.loadFromFile("assets/fonts/upheavtt.ttf")) {
+            throw Error("Failed to load font");
+        }
+        _stepsText.setFont(_font);
+        _stepsText.setCharacterSize(24);
+        _stepsText.setFillColor(sf::Color::White);
+        _stepsText.setPosition(10, 10);
+        
+        _gameOverText.setFont(_font);
+        _gameOverText.setCharacterSize(48);
+        _gameOverText.setFillColor(sf::Color::Red);
+        _gameOverText.setString("Out of steps! Restarting level...");
     }
 
     bool Adventure::isCellFree(int x, int y) const
@@ -86,15 +102,32 @@ namespace triad
     {
         int newX = _playerPos.x + dx;
         int newY = _playerPos.y + dy;
+        bool moved = false;
 
         if (newY >= 0 && newY < static_cast<int>(_map->size()) &&
             newX >= 0 && newX < static_cast<int>((*_map)[newY].size())) {
             if (isRockAt(newX, newY)) {
+                int oldX = _playerPos.x;
+                int oldY = _playerPos.y;
                 RockLogic(dx, dy, newX, newY);
+                if (_playerPos.x != oldX || _playerPos.y != oldY) {
+                    moved = true;
+                }
             } else if (isCellFree(newX, newY)) {
                 _playerPos.x = newX;
                 _playerPos.y = newY;
+                moved = true;
             }
+            if (moved) {
+                _currentSteps++;
+                
+                if (_currentSteps > _maxSteps) {
+                    _gameOver = true;
+                    _gameOverClock.restart();
+                    return;
+                }
+            }
+            
             if ((*_map)[_playerPos.y][_playerPos.x] == 'W') {
                 try {
                     _stateManager.RequestStateChange(std::make_unique<Visual>(_stateManager));
@@ -148,6 +181,10 @@ namespace triad
 
     void Adventure::SetKey(TKey key)
     {
+        if (_gameOver) {
+            return;
+        }
+        
         int dx = 0;
         int dy = 0;
 
@@ -188,6 +225,12 @@ namespace triad
 
     void Adventure::Update()
     {
+        if (_gameOver) {
+            if (_gameOverClock.getElapsedTime().asSeconds() >= 2.0f) {
+                _gameOver = false;
+                Init();
+            }
+        }
     }
 
     void Adventure::setTiles(sf::Vector2f offset)
@@ -256,6 +299,34 @@ namespace triad
         _lockSprite.setTexture(_lockTexture);
     }
 
+    
+    int Adventure::calculateMaxSteps() const
+    {
+        TDifficulty difficulty = _levelManager.GetDifficulty();
+        TLevel level = _levelManager.GetLevel();
+        
+        int baseSteps = 0;
+        
+        switch (level) {
+            case TLevel::LEVEL1: baseSteps = 25; break;
+            case TLevel::LEVEL2: baseSteps = 25; break;
+            case TLevel::LEVEL3: baseSteps = 35; break;
+            case TLevel::LEVEL4: baseSteps = 25; break;
+            case TLevel::LEVEL5: baseSteps = 30; break;
+        }
+        
+        switch (difficulty) {
+            case TDifficulty::EASY:
+                return baseSteps + 10;
+            case TDifficulty::NORMAL:
+                return baseSteps + 5;
+            case TDifficulty::HARD:
+                return baseSteps - 5;
+        }
+        
+        return baseSteps;
+    }
+
     void Adventure::Display()
     {
         if (!_stateManager.GetWindow().isOpen() || !_map) {
@@ -265,12 +336,26 @@ namespace triad
             (_stateManager.GetWindow().getSize().x - _map->at(0).size() * _tileSize) / 2,
             (_stateManager.GetWindow().getSize().y - _map->size() * _tileSize) / 2
         );
-        _stateManager.GetWindow().clear(sf::Color::Yellow);
+        _stateManager.GetWindow().clear(sf::Color::Black);
         setTiles(offset);
         for (const auto& rock : _rocks) {
             _rockSprite.setScale(4.0f, 4.0f);
             _rockSprite.setPosition(offset.x + rock.x * _tileSize, offset.y + rock.y * _tileSize);
             _stateManager.GetWindow().draw(_rockSprite);
+        }
+        _stepsText.setString("Steps: " + std::to_string(_currentSteps) + " / " + std::to_string(_maxSteps));
+        if (_currentSteps > _maxSteps * 0.8f) {
+            _stepsText.setFillColor(sf::Color::Red);
+        } else {
+            _stepsText.setFillColor(sf::Color::White);
+        }
+        _stateManager.GetWindow().draw(_stepsText);
+        if (_gameOver) {
+            _gameOverText.setPosition(
+                _stateManager.GetWindow().getSize().x / 2 - _gameOverText.getGlobalBounds().width / 2,
+                _stateManager.GetWindow().getSize().y / 2 - _gameOverText.getGlobalBounds().height / 2
+            );
+            _stateManager.GetWindow().draw(_gameOverText);
         }
     }
 
