@@ -22,6 +22,7 @@ namespace triad
             void Pause();
             void Resume();
             bool IsPlaying() const;
+            bool IsPlayingFile(const std::string &filePath) const;
             void SetVolume(float volume);
             float GetVolume() const;
 
@@ -29,6 +30,7 @@ namespace triad
             MusicManager() = default;
             sf::Music _music;
             float _volume;
+            std::string _currentFile;
     };
 }
 

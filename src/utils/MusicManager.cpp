@@ -21,6 +21,7 @@ namespace triad
         if (!_music.openFromFile(filePath)) {
             throw Error("Failed to load music file: " + filePath);
         }
+        _currentFile = filePath;
         _music.setLoop(true);
         _music.play();
     }
@@ -43,6 +44,11 @@ namespace triad
     bool MusicManager::IsPlaying() const
     {
         return _music.getStatus() == sf::Music::Playing;
+    }
+
+    bool MusicManager::IsPlayingFile(const std::string &filePath) const
+    {
+        return IsPlaying() && _currentFile == filePath;
     }
 
     void MusicManager::SetVolume(float volume)

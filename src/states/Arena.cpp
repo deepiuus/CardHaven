@@ -524,8 +524,8 @@ namespace triad
                             &CardManager::GetInstance().GetCard(1),
                             &CardManager::GetInstance().GetCard(8),
                             &CardManager::GetInstance().GetCard(13),
-                            &CardManager::GetInstance().GetCard(18),
-                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(2),
+                            &CardManager::GetInstance().GetCard(7),
                         };
                         _player1Deck = {
                             &CardManager::GetInstance().GetCard(16),
@@ -537,18 +537,18 @@ namespace triad
                         break;
                     case TLevel::LEVEL5:
                         _player2Deck = {
-                            &CardManager::GetInstance().GetCard(2),
                             &CardManager::GetInstance().GetCard(9),
                             &CardManager::GetInstance().GetCard(12),
-                            &CardManager::GetInstance().GetCard(16),
+                            &CardManager::GetInstance().GetCard(3),
+                            &CardManager::GetInstance().GetCard(6),
                             &CardManager::GetInstance().GetCard(20),
                         };
                         _player1Deck = {
                             &CardManager::GetInstance().GetCard(1),
-                            &CardManager::GetInstance().GetCard(6),
-                            &CardManager::GetInstance().GetCard(11),
-                            &CardManager::GetInstance().GetCard(17),
-                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(8),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(2),
+                            &CardManager::GetInstance().GetCard(7),
                         };
                         break;
                 }
@@ -596,31 +596,59 @@ namespace triad
                             &CardManager::GetInstance().GetCard(19),
                             &CardManager::GetInstance().GetCard(9),
                         };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(16),
+                            &CardManager::GetInstance().GetCard(20),
+                        };
                         break;
                     case TLevel::LEVEL3:
                         _player2Deck = {
-                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(4),
                             &CardManager::GetInstance().GetCard(9),
                             &CardManager::GetInstance().GetCard(13),
                             &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(5),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(16),
                             &CardManager::GetInstance().GetCard(20),
                         };
                         break;
                     case TLevel::LEVEL4:
                         _player2Deck = {
-                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(3),
                             &CardManager::GetInstance().GetCard(8),
                             &CardManager::GetInstance().GetCard(13),
                             &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(4),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(16),
                             &CardManager::GetInstance().GetCard(20),
                         };
                         break;
                     case TLevel::LEVEL5:
                         _player2Deck = {
-                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(2),
                             &CardManager::GetInstance().GetCard(9), 
                             &CardManager::GetInstance().GetCard(13),  
                             &CardManager::GetInstance().GetCard(19),  
+                            &CardManager::GetInstance().GetCard(4),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(16),
                             &CardManager::GetInstance().GetCard(20),
                         };
                         break;
