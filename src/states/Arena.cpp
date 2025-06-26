@@ -6,14 +6,12 @@
 */
 
 #include "Arena.hpp"
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Graphics/Font.hpp>
 
 namespace triad
 {
     Arena::Arena(StateManager &stateManager)
         : _stateManager(stateManager), width(800), height(600), _endGame(false), _fromMenu(false),
-          _playerCount(0), _ennemyCount(0), _occupiedCount(0), _cardSpacing(30), _cardY(60)
+          _playerCount(0), _ennemyCount(0), _occupiedCount(0), _cardSpacing(30), _cardY(60), _difficulty(TDifficulty::EASY)
     {
     }
 
@@ -26,20 +24,8 @@ namespace triad
         sf::Sprite sprite1;
         sf::Sprite sprite2;
 
-        _player1Deck = {
-            &CardManager::GetInstance().GetCard(1),
-            &CardManager::GetInstance().GetCard(2),
-            &CardManager::GetInstance().GetCard(3),
-            &CardManager::GetInstance().GetCard(4),
-            &CardManager::GetInstance().GetCard(5),
-        };
-        _player2Deck = {
-            &CardManager::GetInstance().GetCard(6),
-            &CardManager::GetInstance().GetCard(7),
-            &CardManager::GetInstance().GetCard(8),
-            &CardManager::GetInstance().GetCard(9),
-            &CardManager::GetInstance().GetCard(10),
-        };
+        SetupDecksBasedOnDifficulty();
+
         _player1Cards.clear();
         _player2Cards.clear();
         for (int i = 0; i < 5; i++) {
@@ -444,5 +430,180 @@ namespace triad
     void Arena::SetFromMenu(bool fromMenu)
     {
         _fromMenu = fromMenu;
+    }
+
+    void Arena::SetDifficulty(TDifficulty difficulty)
+    {
+        _difficulty = difficulty;
+    }
+
+    void Arena::SetupDecksBasedOnDifficulty()
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        
+        switch (_difficulty) {
+            case TDifficulty::EASY: {
+                TLevel currentLevel = _stateManager.GetLevelManager().GetLevel();
+                
+                _player1Deck = {
+                    &CardManager::GetInstance().GetCard(1),
+                    &CardManager::GetInstance().GetCard(2),
+                    &CardManager::GetInstance().GetCard(3),
+                    &CardManager::GetInstance().GetCard(4),
+                    &CardManager::GetInstance().GetCard(5),
+                };
+                
+                switch (currentLevel) {
+                    case TLevel::LEVEL1:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(7),
+                            &CardManager::GetInstance().GetCard(8),
+                            &CardManager::GetInstance().GetCard(9),
+                            &CardManager::GetInstance().GetCard(10),
+                        };
+                        break;
+                    case TLevel::LEVEL2:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(12),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(14),
+                            &CardManager::GetInstance().GetCard(15),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(7),
+                            &CardManager::GetInstance().GetCard(8),
+                            &CardManager::GetInstance().GetCard(9),
+                            &CardManager::GetInstance().GetCard(10),
+                        };
+                        break;
+                    case TLevel::LEVEL3:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(16),
+                            &CardManager::GetInstance().GetCard(17),
+                            &CardManager::GetInstance().GetCard(18),
+                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(20),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(12),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(14),
+                            &CardManager::GetInstance().GetCard(15),
+                        };
+                        break;
+                    case TLevel::LEVEL4:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(8),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(18),
+                            &CardManager::GetInstance().GetCard(19),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(16),
+                            &CardManager::GetInstance().GetCard(17),
+                            &CardManager::GetInstance().GetCard(18),
+                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(20),
+                        };
+                        break;
+                    case TLevel::LEVEL5:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(2),
+                            &CardManager::GetInstance().GetCard(9),
+                            &CardManager::GetInstance().GetCard(12),
+                            &CardManager::GetInstance().GetCard(16),
+                            &CardManager::GetInstance().GetCard(20),
+                        };
+                        _player1Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(11),
+                            &CardManager::GetInstance().GetCard(17),
+                            &CardManager::GetInstance().GetCard(19),
+                        };
+                        break;
+                }
+                break;
+            }
+            case TDifficulty::NORMAL: {
+                std::vector<int> availableCards = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+                std::shuffle(availableCards.begin(), availableCards.end(), gen);
+                
+                _player1Deck.clear();
+                _player2Deck.clear();
+                
+                for (int i = 0; i < 5; i++) {
+                    _player1Deck.push_back(&CardManager::GetInstance().GetCard(availableCards[i]));
+                    _player2Deck.push_back(&CardManager::GetInstance().GetCard(availableCards[i + 5]));
+                }
+                break;
+            }
+            case TDifficulty::HARD: {
+                _player1Deck = {
+                    &CardManager::GetInstance().GetCard(1),
+                    &CardManager::GetInstance().GetCard(6),
+                    &CardManager::GetInstance().GetCard(11),
+                    &CardManager::GetInstance().GetCard(16),
+                    &CardManager::GetInstance().GetCard(20),
+                };
+
+                TLevel currentLevel = _stateManager.GetLevelManager().GetLevel();
+                
+                switch (currentLevel) {
+                    case TLevel::LEVEL1:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(3),
+                            &CardManager::GetInstance().GetCard(7),
+                            &CardManager::GetInstance().GetCard(12),
+                            &CardManager::GetInstance().GetCard(17),
+                            &CardManager::GetInstance().GetCard(18),
+                        };
+                        break;
+                    case TLevel::LEVEL2:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(2),
+                            &CardManager::GetInstance().GetCard(8),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(9),
+                        };
+                        break;
+                    case TLevel::LEVEL3:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(9),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(20),
+                        };
+                        break;
+                    case TLevel::LEVEL4:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(8),
+                            &CardManager::GetInstance().GetCard(13),
+                            &CardManager::GetInstance().GetCard(19),
+                            &CardManager::GetInstance().GetCard(20),
+                        };
+                        break;
+                    case TLevel::LEVEL5:
+                        _player2Deck = {
+                            &CardManager::GetInstance().GetCard(1),
+                            &CardManager::GetInstance().GetCard(9), 
+                            &CardManager::GetInstance().GetCard(13),  
+                            &CardManager::GetInstance().GetCard(19),  
+                            &CardManager::GetInstance().GetCard(20),
+                        };
+                        break;
+                }
+                break;
+            }
+        }
     }
 }

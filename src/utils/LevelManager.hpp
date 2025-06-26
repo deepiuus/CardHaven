@@ -21,6 +21,12 @@ namespace triad
         LEVEL4,
         LEVEL5,
     };
+
+    enum class TDifficulty {
+        EASY,
+        NORMAL,
+        HARD
+    };
     class LevelManager {
         public:
             LevelManager();
@@ -31,6 +37,8 @@ namespace triad
             TLevel GetLevel() const;
             const std::vector<std::vector<char>> &GetMap() const;
             void ResetLevel();
+            void SetDifficulty(TDifficulty difficulty);
+            TDifficulty GetDifficulty() const;
             void StartDialogue();
             bool IsDialogueFinished() const;
             const std::string &GetDialogue() const;
@@ -38,6 +46,7 @@ namespace triad
             size_t GetDialogueIndex() const;
         private:
             TLevel _currentLevel;
+            TDifficulty _currentDifficulty;
             std::vector<std::vector<char>> _map;
             std::vector<std::string> _dialogue;
             size_t _dialogueIndex;

@@ -10,7 +10,7 @@
 namespace triad
 {
     LevelManager::LevelManager()
-        : _currentLevel(TLevel::LEVEL1), _map()
+        : _currentLevel(TLevel::LEVEL1), _currentDifficulty(TDifficulty::EASY), _map()
     {
     }
 
@@ -135,5 +135,15 @@ namespace triad
     {
         _currentLevel = level;
         LoadLevel();
+    }
+
+    void LevelManager::SetDifficulty(TDifficulty difficulty)
+    {
+        _currentDifficulty = difficulty;
+    }
+
+    TDifficulty LevelManager::GetDifficulty() const
+    {
+        return _currentDifficulty;
     }
 }

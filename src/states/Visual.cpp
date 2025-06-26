@@ -49,7 +49,9 @@ namespace triad
                         _currentFace = 2;
                     _levelManager.NextDialogue();
                 } else {
-                    _stateManager.RequestStateChange(std::make_unique<Arena>(_stateManager));
+                    auto arena = std::make_unique<Arena>(_stateManager);
+                    arena->SetDifficulty(_levelManager.GetDifficulty());
+                    _stateManager.RequestStateChange(std::move(arena));
                     return;
                 }
                 break;

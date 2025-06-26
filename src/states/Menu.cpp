@@ -9,6 +9,7 @@
 #include "Adventure.hpp"
 #include "Arena.hpp"
 #include "Settings.hpp"
+#include "DifficultyMenu.hpp"
 
 namespace triad
 {
@@ -73,8 +74,7 @@ namespace triad
         if (_optionSelected) {
             switch (_selectedOption) {
                 case 0:
-                    _stateManager.GetLevelManager().ResetLevel();
-                    _stateManager.RequestStateChange(std::make_unique<Adventure>(_stateManager));
+                    _stateManager.RequestStateChange(std::make_unique<DifficultyMenu>(_stateManager));
                     break;
                 case 1: {
                     auto arena = std::make_unique<Arena>(_stateManager);

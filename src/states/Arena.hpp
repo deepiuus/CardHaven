@@ -11,8 +11,10 @@
 #include "../IGames.hpp"
 #include "../utils/StateManager.hpp"
 #include "../utils/CardManager.hpp"
+#include "../utils/LevelManager.hpp"
 #include "Menu.hpp"
 #include "Adventure.hpp"
+#include <random>
 
 namespace triad
 {
@@ -27,8 +29,10 @@ namespace triad
             void Destroy() override;
             void SetFromMenu(bool fromMenu);
             void SetScore();
+            void SetDifficulty(TDifficulty difficulty);
 
         private:
+            void SetupDecksBasedOnDifficulty();
             void SetupBoard(float cellSize, float cellGap, float gridStartX, float gridStartY);
             void SetupCards(int cardSpacing, int cardY);
             void DraggingCard();
@@ -75,6 +79,7 @@ namespace triad
             int _occupiedCount;
             int _cardSpacing;
             int _cardY;
+            TDifficulty _difficulty;
     };
 }
 
