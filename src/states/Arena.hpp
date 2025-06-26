@@ -52,6 +52,7 @@ namespace triad
             void CaptureCard(int x, int y);
             void ResetCard();
             bool isCardOnBoard(const Card* card) const;
+            bool isPlayerCardOnBoard(int playerIndex, int cardIndex) const;
             int GetHoveredId(const std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, float baseX, float baseY, int cardCount, const sf::Vector2i& mousePos) const;
             void SetHoveredStyle(sf::Sprite& card, bool isHovered, float baseX, float baseY, sf::Color normalColor, sf::Color hoverColor) const;
             void SetHoveredCards(std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, float baseX, sf::Color normalColor, sf::Color hoverColor, int hoveredIdx) const;
@@ -94,6 +95,8 @@ namespace triad
             TGameMode _gameMode;
             sf::Clock _aiTimer;
             bool _aiThinking;
+            bool _player1CardsPlayed[5];
+            bool _player2CardsPlayed[5];
     };
 }
 

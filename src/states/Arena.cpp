@@ -71,6 +71,10 @@ namespace triad
         float gridStartX = width / 2 - gridWidth / 2;
         float gridStartY = height / 2 - gridHeight / 2;
 
+        for (int i = 0; i < 5; i++) {
+            _player1CardsPlayed[i] = false;
+            _player2CardsPlayed[i] = false;
+        }
         MusicManager::GetInstance().Play("assets/sounds/Epitomize.wav");
         SetupBoard(cellSize, cellGap, gridStartX, gridStartY);
         SetupCards(_cardSpacing, _cardY);
@@ -186,6 +190,7 @@ namespace triad
             );
             _boardSprites[y][x] = &_player1Cards[_draggedCard.y];
             _boardOccupancy[y][x] = {0, _player1Deck[_draggedCard.y]};
+            _player1CardsPlayed[_draggedCard.y] = true;
         } else {
             _player2Cards[_draggedCard.y].setPosition(
                 cellCenter.x - _player2Cards[_draggedCard.y].getTexture()->getSize().x / 2.f,
@@ -193,6 +198,7 @@ namespace triad
             );
             _boardSprites[y][x] = &_player2Cards[_draggedCard.y];
             _boardOccupancy[y][x] = {1, _player2Deck[_draggedCard.y]};
+            _player2CardsPlayed[_draggedCard.y] = true;
         }
         _currentTurn = 1 - _currentTurn;
         _turnText.setString(_currentTurn == 1 ? "Player 1 turn" : "Player 2 turn");
@@ -237,10 +243,19 @@ namespace triad
         return false;
     }
 
+    bool Arena::isPlayerCardOnBoard(int playerIndex, int cardIndex) const
+    {
+        if (playerIndex == 0) {
+            return _player1CardsPlayed[cardIndex];
+        } else {
+            return _player2CardsPlayed[cardIndex];
+        }
+    }
+
     void Arena::SetDraggedCards(std::vector<sf::Sprite> &cards, std::vector<const Card *> &deck, int playerIndex, const sf::Vector2i &mousePos)
     {
         for (size_t i = 0; i < cards.size(); i++) {
-            if (isCardOnBoard(deck[i]))
+            if (isPlayerCardOnBoard(playerIndex, i))
                 continue;
             if (cards[i].getGlobalBounds().contains(
                 static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
@@ -278,7 +293,8 @@ namespace triad
     int Arena::GetHoveredId(const std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, float baseX, float baseY, int cardCount, const sf::Vector2i& mousePos) const
     {
         for (int i = cardCount - 1; i >= 0; --i) {
-            if (isCardOnBoard(deck[i]))
+            int playerIndex = (&deck == &_player1Deck) ? 0 : 1;
+            if (isPlayerCardOnBoard(playerIndex, i))
                 continue;
             float x = baseX;
             float y = baseY + i * (60 + _cardSpacing);
@@ -306,7 +322,8 @@ namespace triad
     void Arena::SetHoveredCards(std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, float baseX, sf::Color normalColor, sf::Color hoverColor, int hoveredIdx) const
     {
         for (size_t i = 0; i < cards.size(); ++i) {
-            if (isCardOnBoard(deck[i]))
+            int playerIndex = (&deck == &_player1Deck) ? 0 : 1;
+            if (isPlayerCardOnBoard(playerIndex, i))
                 continue;
             float y = _cardY + i * (60 + _cardSpacing);
             SetHoveredStyle(cards[i], static_cast<int>(i) == hoveredIdx, baseX, y, normalColor, hoverColor);
@@ -316,7 +333,8 @@ namespace triad
     void Arena::DrawCards(sf::RenderWindow& window, const std::vector<sf::Sprite>& cards, const std::vector<const Card*>& deck, int hoveredIdx, bool drawHoveredLast) const
     {
         for (size_t i = 0; i < cards.size(); ++i) {
-            if (isCardOnBoard(deck[i]))
+            int playerIndex = (&deck == &_player1Deck) ? 0 : 1;
+            if (isPlayerCardOnBoard(playerIndex, i))
                 continue;
             if (drawHoveredLast && static_cast<int>(i) == hoveredIdx)
                 continue;
@@ -480,7 +498,7 @@ namespace triad
                 switch (currentLevel) {
                     case TLevel::LEVEL1:
                         _player2Deck = {
-                            &CardManager::GetInstance().GetCard(6),
+                            &CardManager::GetInstance().GetCard(5),
                             &CardManager::GetInstance().GetCard(7),
                             &CardManager::GetInstance().GetCard(8),
                             &CardManager::GetInstance().GetCard(9),
@@ -670,13 +688,16 @@ namespace triad
                 _boardGrid[boardY][boardX].left + _boardGrid[boardY][boardX].width / 2.f,
                 _boardGrid[boardY][boardX].top + _boardGrid[boardY][boardX].height / 2.f
             };
-            
+
+            _player2Cards[cardIndex].setColor(sf::Color(255, 100, 100));
+            _player2Cards[cardIndex].setScale(1.f, 1.f);
             _player2Cards[cardIndex].setPosition(
                 cellCenter.x - _player2Cards[cardIndex].getTexture()->getSize().x / 2.f,
                 cellCenter.y - _player2Cards[cardIndex].getTexture()->getSize().y / 2.f
             );
             _boardSprites[boardY][boardX] = &_player2Cards[cardIndex];
             _boardOccupancy[boardY][boardX] = {1, _player2Deck[cardIndex]};
+            _player2CardsPlayed[cardIndex] = true;
             
             CaptureCard(boardX, boardY);
             _currentTurn = 1;
@@ -691,7 +712,7 @@ namespace triad
         sf::Vector2i bestPosition(-1, -1);
         
         for (int cardIndex = 0; cardIndex < 5; cardIndex++) {
-            if (isCardOnBoard(_player2Deck[cardIndex])) continue;
+            if (isPlayerCardOnBoard(1, cardIndex)) continue;
             
             for (int y = 0; y < 3; y++) {
                 for (int x = 0; x < 3; x++) {

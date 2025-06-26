@@ -36,6 +36,7 @@ namespace triad
             }
         }
         _lockOpened = false;
+        _hasKey = false;
         _currentSteps = 0;
         _maxSteps = calculateMaxSteps();
         _gameOver = false;
@@ -121,7 +122,7 @@ namespace triad
             if (moved) {
                 _currentSteps++;
                 
-                if (_currentSteps > _maxSteps) {
+                if (_currentSteps >= _maxSteps) {
                     _gameOver = true;
                     _gameOverClock.restart();
                     return;
